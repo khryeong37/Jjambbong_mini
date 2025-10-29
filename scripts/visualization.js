@@ -1,6 +1,18 @@
 // scripts/visualization.js
 const CSV_URL = './data/merged-atom-cosmos_final.csv';
 
+function cssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+const COLOR_ATOM = cssVar('--atom');
+const COLOR_ATOMONE = cssVar('--atomone');
+
+const COLOR_BG = cssVar('--bg');
+const COLOR_TEXT = cssVar('--white');
+const COLOR_GRAY = cssVar('--gray100');
+const COLOR_PRIMARY = cssVar('--primary500');
+
 const toNum = (v) => (v === '' || v == null ? null : +v);
 const rollingSum = (arr, win = 7) =>
   arr.map((_, i) => {
@@ -69,7 +81,7 @@ let tMin, tMax; // 범위 버튼에서 사용
     y: priceATOM,
     name: 'ATOM – Price (actual)',
     mode: 'lines',
-    line: { width: 2, color: '#7ab3ff' },
+    line: { width: 3, color: COLOR_ATOM },
     yaxis: 'y',
     xaxis: 'x2',
   };
@@ -78,7 +90,7 @@ let tMin, tMax; // 범위 버튼에서 사용
     y: priceONE,
     name: 'ATOMONE – Price (actual)',
     mode: 'lines',
-    line: { width: 2, color: '#ff6b6b', dash: 'dot' },
+    line: { width: 3, color: COLOR_ATOMONE },
     yaxis: 'y',
     xaxis: 'x2',
   };
@@ -92,14 +104,11 @@ let tMin, tMax; // 범위 버튼에서 사용
     fill: 'tozeroy',
     xaxis: 'x2',
     yaxis: 'y2',
-    line: { width: 1, color: '#7ab3ff' },
-    opacity: 0.28,
+    line: { width: 3, color: COLOR_ATOM },
+    opacity: 0.4,
     customdata: cdVolATOM,
     hovertemplate:
-      'Date (UTC): %{x}<br>' +
-      '<b>ATOM Volume (index, 7d):</b> %{y:.2f}<br>' +
-      'ATOM Volume (raw, 7d sum): %{customdata[0]:,.0f}<br>' +
-      'ATOM Volume (raw, daily): %{customdata[1]:,.0f}<extra></extra>',
+      '<b>ATOM Volume:</b> %{y:.2f}<br>',
   };
   const traceVolONE = {
     x: t,
@@ -110,14 +119,11 @@ let tMin, tMax; // 범위 버튼에서 사용
     fill: 'tozeroy',
     yaxis: 'y2',
     xaxis: 'x2',
-    line: { width: 1, color: '#ff6b6b' },
-    opacity: 0.28,
+    line: { width: 3, color: COLOR_ATOMONE },
+    opacity: 0.4,
     customdata: cdVolONE,
     hovertemplate:
-      'Date (UTC): %{x}<br>' +
-      '<b>ATOMONE Volume (index, 7d):</b> %{y:.2f}<br>' +
-      'ATOMONE Volume (raw, 7d sum): %{customdata[0]:,.0f}<br>' +
-      'ATOMONE Volume (raw, daily): %{customdata[1]:,.0f}<extra></extra>',
+      '<b>ATOMONE Volume:</b> %{y:.2f}<br>',
   };
 
   const traceTxATOM = {
@@ -127,14 +133,11 @@ let tMin, tMax; // 범위 버튼에서 사용
     type: 'bar',
     yaxis: 'y2',
     xaxis: 'x2',
-    marker: { color: '#3b4ea0' },
-    opacity: 0.45,
+    marker: { color: COLOR_ATOM },
+    opacity: 0.4,
     customdata: cdTxATOM,
     hovertemplate:
-      'Date (UTC): %{x}<br>' +
-      '<b>ATOM Tx (index, 7d):</b> %{y:.2f}<br>' +
-      'ATOM Tx (raw, 7d sum): %{customdata[0]:,.0f}<br>' +
-      'ATOM Tx (raw, daily): %{customdata[1]:,.0f}<extra></extra>',
+      '<b>ATOM Tx:</b> %{y:.2f}<br>',
   };
   const traceTxONE = {
     x: t,
@@ -143,14 +146,11 @@ let tMin, tMax; // 범위 버튼에서 사용
     type: 'bar',
     yaxis: 'y2',
     xaxis: 'x2',
-    marker: { color: '#8a2f2f' },
-    opacity: 0.45,
+    marker: { color: COLOR_ATOMONE },
+    opacity: 0.4,
     customdata: cdTxONE,
     hovertemplate:
-      'Date (UTC): %{x}<br>' +
-      '<b>ATOMONE Tx (index, 7d):</b> %{y:.2f}<br>' +
-      'ATOMONE Tx (raw, 7d sum): %{customdata[0]:,.0f}<br>' +
-      'ATOMONE Tx (raw, daily): %{customdata[1]:,.0f}<extra></extra>',
+      '<b>ATOMONE Tx:</b> %{y:.2f}<br>',
   };
   const traceDummyForSlider = {
     x: t,
@@ -300,6 +300,7 @@ let tMin, tMax; // 범위 버튼에서 사용
   function closePop(e) {
     if (!pop.contains(e.target) && e.target !== helpBtn) {
       pop.classList.remove('open');
+      helpBtn.classList.remove('is-open');
       helpBtn.setAttribute('aria-expanded', 'false');
       document.removeEventListener('click', closePop);
     }
@@ -307,11 +308,22 @@ let tMin, tMax; // 범위 버튼에서 사용
 
   helpBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    const open = pop.classList.toggle('open');
-    helpBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-    if (open) document.addEventListener('click', closePop);
-  });
+    const willOpen = !pop.classList.contains('open');
 
+    if (willOpen) {
+      // 열리는 순간
+      pop.classList.add('open');
+      helpBtn.classList.add('is-open');             // 🔥 버튼에 on상태 스타일
+      helpBtn.setAttribute('aria-expanded', 'true');
+      document.addEventListener('click', closePop);
+    } else {
+      // 이미 열려 있었으면 닫아
+      pop.classList.remove('open');
+      helpBtn.classList.remove('is-open');          // 🔥 off
+      helpBtn.setAttribute('aria-expanded', 'false');
+      document.removeEventListener('click', closePop);
+    }
+  });
   // 초기 범위: all
   window.Plotly.relayout('chart', { 'xaxis.range': [tMin, tMax] });
 })();
