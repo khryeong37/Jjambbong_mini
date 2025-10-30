@@ -107,7 +107,7 @@ let tMin, tMax; // 범위 버튼에서 사용
     xaxis: 'x2',
     yaxis: 'y2',
     line: { width: 3, color: COLOR_ATOM },
-    opacity: 0.4,
+    opacity: 0.2,
     customdata: cdVolATOM,
     hovertemplate:
       '%{y:.2f}<br>',
@@ -122,7 +122,7 @@ let tMin, tMax; // 범위 버튼에서 사용
     yaxis: 'y2',
     xaxis: 'x2',
     line: { width: 3, color: COLOR_ATOMONE },
-    opacity: 0.4,
+    opacity: 0.2,
     customdata: cdVolONE,
     hovertemplate:
       '%{y:.2f}<br>',
