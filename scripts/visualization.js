@@ -7,11 +7,13 @@ function cssVar(name) {
 
 const COLOR_ATOM = cssVar('--atom');
 const COLOR_ATOMONE = cssVar('--atomone');
-
 const COLOR_BG = cssVar('--bg');
 const COLOR_TEXT = cssVar('--white');
 const COLOR_GRAY = cssVar('--gray100');
+const COLOR_WHITE = cssVar('--white');
 const COLOR_PRIMARY = cssVar('--primary500');
+
+const FONT_title02 = cssVar('--title02-sb-24');
 
 const toNum = (v) => (v === '' || v == null ? null : +v);
 const rollingSum = (arr, win = 7) =>
@@ -108,7 +110,7 @@ let tMin, tMax; // 범위 버튼에서 사용
     opacity: 0.4,
     customdata: cdVolATOM,
     hovertemplate:
-      '<b>ATOM Volume:</b> %{y:.2f}<br>',
+      '%{y:.2f}<br>',
   };
   const traceVolONE = {
     x: t,
@@ -123,7 +125,7 @@ let tMin, tMax; // 범위 버튼에서 사용
     opacity: 0.4,
     customdata: cdVolONE,
     hovertemplate:
-      '<b>ATOMONE Volume:</b> %{y:.2f}<br>',
+      '%{y:.2f}<br>',
   };
 
   const traceTxATOM = {
@@ -137,7 +139,7 @@ let tMin, tMax; // 범위 버튼에서 사용
     opacity: 0.4,
     customdata: cdTxATOM,
     hovertemplate:
-      '<b>ATOM Tx:</b> %{y:.2f}<br>',
+      '%{y:.2f}<br>',
   };
   const traceTxONE = {
     x: t,
@@ -150,7 +152,7 @@ let tMin, tMax; // 범위 버튼에서 사용
     opacity: 0.4,
     customdata: cdTxONE,
     hovertemplate:
-      '<b>ATOMONE Tx:</b> %{y:.2f}<br>',
+      '%{y:.2f}<br>',
   };
   const traceDummyForSlider = {
     x: t,
@@ -176,8 +178,8 @@ let tMin, tMax; // 범위 버튼에서 사용
 
   const layout = {
     hovermode: 'x unified',
-    paper_bgcolor: '#0f0d18',
-    plot_bgcolor: '#0f0d18',
+    paper_bgcolor: COLOR_BG,
+    plot_bgcolor: COLOR_BG,
     font: { color: '#f3eefc' },
     legend: { orientation: 'h', y: -0.22, x: 0.5, xanchor: 'center' }, // 아래 중앙
     margin: { t: 10, r: 72, b: 72, l: 72 }, // 좌우 동일 마진으로 균형
@@ -226,9 +228,26 @@ let tMin, tMax; // 범위 버튼에서 사용
 
   // 겹침 방지 & 가운데 느낌
   // 1) 메인 플롯을 살짝 위로 올려서(=아래에 공간 확보)
-  layout.yaxis = { title: 'Price (actual)', side: 'left', domain: [0.18, 1] };
+  layout.yaxis = {
+    title: {
+      text: 'Price (actual)',
+      standoff: 24,
+      font: {
+        ...FONT_title02,
+        color: COLOR_WHITE
+      }
+    },
+    side: 'left', domain: [0.18, 1]
+  };
   layout.yaxis2 = {
-    title: 'Activity — Volume (area) & Tx (bars) — index=100 (7d)',
+    title: {
+      text: 'Activity — Volume (area) & Tx (bars) — index=100 (7d)',
+      standoff: 24,
+      font: {
+        ...FONT_title02,
+        color: COLOR_WHITE
+      }
+    },
     overlaying: 'y',
     side: 'right',
     type: 'linear',
@@ -311,15 +330,13 @@ let tMin, tMax; // 범위 버튼에서 사용
     const willOpen = !pop.classList.contains('open');
 
     if (willOpen) {
-      // 열리는 순간
       pop.classList.add('open');
-      helpBtn.classList.add('is-open');             // 🔥 버튼에 on상태 스타일
+      helpBtn.classList.add('is-open');
       helpBtn.setAttribute('aria-expanded', 'true');
       document.addEventListener('click', closePop);
     } else {
-      // 이미 열려 있었으면 닫아
       pop.classList.remove('open');
-      helpBtn.classList.remove('is-open');          // 🔥 off
+      helpBtn.classList.remove('is-open');
       helpBtn.setAttribute('aria-expanded', 'false');
       document.removeEventListener('click', closePop);
     }
