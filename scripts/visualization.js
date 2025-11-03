@@ -1,346 +1,436 @@
-// scripts/visualization.js
-const CSV_URL = './data/merged-atom-cosmos_final.csv';
+// ===== 전역 상태 =====
+let G = { ts: [], s: {}, xMin: null, xMax: null };
 
-function cssVar(name) {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+// ===== 포맷 =====
+const fmtInt = new Intl.NumberFormat('en-US'); // 12,345,678
+const fmt2 = (v) => (v == null || isNaN(v) ? '' : Number(v).toFixed(2));
+const $$ = (sel) => document.querySelector(sel);
+
+// CSV path (자동 로드)
+const CSV_PATH = './data/atomone_cosmos_data_final.csv';
+
+// ===== 컬럼 매핑 =====
+function resolveCols(fields) {
+  const H = fields.map((h) => (h || '').toLowerCase().trim());
+  const find = (cands) => {
+    const i = H.findIndex((h) => cands.some((c) => h.includes(c)));
+    return i >= 0 ? fields[i] : null;
+  };
+  return {
+    timestamp: find(['timestamp', 'date', 'time']),
+    priceAtomone: find([
+      'atomone price',
+      'atomone_price',
+      'marketprice_atomone',
+    ]),
+    priceAtom: find([
+      'cosmos price',
+      'atom price',
+      'cosmos_price',
+      'atom_price',
+      'marketprice_cosmos',
+    ]),
+    // norm
+    txAtomone: find([
+      'atomone tx (norm)',
+      'txcount_atomone_norm',
+      'atomone tx_norm',
+    ]),
+    volAtomone: find([
+      'atomone volume (norm)',
+      'atomone volume_norm',
+      'marketvolume_atomone_adj_global',
+    ]),
+    txAtom: find([
+      'cosmos tx (norm)',
+      'txcount_cosmos_norm',
+      'atom tx_norm',
+      'cosmos tx_norm',
+    ]),
+    volAtom: find([
+      'cosmos volume (norm)',
+      'cosmos volume_norm',
+      'marketvolume_cosmos_adj_global',
+    ]),
+    // optional raw 7d
+    txAtomone7: find(['atomone tx (7d)', 'atomone tx_7d']),
+    volAtomone7: find(['atomone volume (7d)', 'atomone volume_7d']),
+    txAtom7: find(['cosmos tx (7d)', 'atom tx (7d)', 'cosmos tx_7d']),
+    volAtom7: find(['cosmos volume (7d)', 'cosmos volume_7d']),
+  };
 }
 
-const COLOR_ATOM = cssVar('--atom');
-const COLOR_ATOMONE = cssVar('--atomone');
-const COLOR_BG = cssVar('--bg');
-const COLOR_TEXT = cssVar('--white');
-const COLOR_GRAY = cssVar('--gray100');
-const COLOR_WHITE = cssVar('--white');
-const COLOR_PRIMARY = cssVar('--primary500');
-
-const FONT_title02 = cssVar('--title02-sb-24');
-
-const toNum = (v) => (v === '' || v == null ? null : +v);
-const rollingSum = (arr, win = 7) =>
-  arr.map((_, i) => {
-    const slice = arr
-      .slice(Math.max(0, i - win + 1), i + 1)
-      .map((v) => (v == null || isNaN(v) ? null : +v))
-      .filter((v) => v != null);
-    return slice.length ? slice.reduce((a, b) => a + b, 0) : null;
+// ===== CSV 파싱 → 시리즈 구성 =====
+function parseCSVAndDraw(csvText) {
+  const parsed = Papa.parse(csvText, {
+    header: true,
+    dynamicTyping: false,
+    skipEmptyLines: true,
   });
-const index100 = (arr) => {
-  const first = arr.find((v) => v != null && v > 0);
-  return arr.map((v) => (v != null && first ? (v / first) * 100 : null));
-};
+  const { data, meta } = parsed;
+  const c = resolveCols(meta.fields);
 
-// 단순 CSV 파서(따옴표 없는 가정)
-async function loadCSV(url) {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('CSV fetch 실패: ' + res.status);
-  const text = await res.text();
-  const [headerLine, ...lines] = text.trim().split('\n');
-  const headers = headerLine.split(',').map((h) => h.trim());
-  return lines.map((line) => {
-    const values = line.split(',');
-    const row = {};
-    headers.forEach((h, i) => (row[h] = values[i]?.trim()));
-    return row;
-  });
+  const ts = [],
+    s = {
+      pOne: [],
+      pAtom: [],
+      txOne: [],
+      volOne: [],
+      txOne7: [],
+      volOne7: [],
+      txAtom: [],
+      volAtom: [],
+      txAtom7: [],
+      volAtom7: [],
+    };
+
+  for (const row of data) {
+    const t = row[c.timestamp];
+    if (!t) continue;
+    ts.push(new Date(t));
+    s.pOne.push(+row[c.priceAtomone]);
+    s.pAtom.push(+row[c.priceAtom]);
+    s.txOne.push(+row[c.txAtomone]);
+    s.volOne.push(+row[c.volAtomone]);
+    s.txAtom.push(+row[c.txAtom]);
+    s.volAtom.push(+row[c.volAtom]);
+    s.txOne7.push(c.txAtomone7 ? +row[c.txAtomone7] : null);
+    s.volOne7.push(c.volAtomone7 ? +row[c.volAtomone7] : null);
+    s.txAtom7.push(c.txAtom7 ? +row[c.txAtom7] : null);
+    s.volAtom7.push(c.volAtom7 ? +row[c.volAtom7] : null);
+  }
+
+  G = { ts, s, xMin: ts[0], xMax: ts[ts.length - 1] };
+  draw(ts, s);
 }
 
-let tMin, tMax; // 범위 버튼에서 사용
-
-(async () => {
-  const rows = await loadCSV(CSV_URL);
-
-  const t = rows.map((r) => {
-    const ms = Number(r.timestamp);
-    return isNaN(ms) ? new Date(r.timestamp) : new Date(ms);
-  });
-  tMin = new Date(Math.min(...t.map((d) => +d)));
-  tMax = new Date(Math.max(...t.map((d) => +d)));
-
-  const priceATOM = rows.map((r) => toNum(r.marketPrice_cosmos));
-  const priceONE = rows.map((r) => toNum(r.marketPrice_atomone));
-  const volATOM_raw = rows.map((r) => toNum(r.marketVolume_cosmos));
-  const volONE_raw = rows.map((r) => toNum(r.marketVolume_atomone));
-  const txATOM_raw = rows.map((r) => toNum(r.txCount_cosmos));
-  const txONE_raw = rows.map((r) => toNum(r.txCount_atomone));
-
-  const volATOM_7d = rollingSum(volATOM_raw, 7);
-  const volONE_7d = rollingSum(volONE_raw, 7);
-  const txATOM_7d = rollingSum(txATOM_raw, 7);
-  const txONE_7d = rollingSum(txONE_raw, 7);
-
-  const volATOM_idx = index100(volATOM_7d);
-  const volONE_idx = index100(volONE_7d);
-  const txATOM_idx = index100(txATOM_7d);
-  const txONE_idx = index100(txONE_7d);
-
-  const cdVolATOM = volATOM_7d.map((v, i) => [v, volATOM_raw[i]]);
-  const cdVolONE = volONE_7d.map((v, i) => [v, volONE_raw[i]]);
-  const cdTxATOM = txATOM_7d.map((v, i) => [v, txATOM_raw[i]]);
-  const cdTxONE = txONE_7d.map((v, i) => [v, txONE_raw[i]]);
-
-  const tracePriceATOM = {
-    x: t,
-    y: priceATOM,
-    name: 'ATOM – Price (actual)',
-    mode: 'lines',
-    line: { width: 3, color: COLOR_ATOM },
-    yaxis: 'y',
-    xaxis: 'x2',
-  };
-  const tracePriceONE = {
-    x: t,
-    y: priceONE,
-    name: 'ATOMONE – Price (actual)',
-    mode: 'lines',
-    line: { width: 3, color: COLOR_ATOMONE },
-    yaxis: 'y',
-    xaxis: 'x2',
-  };
-
-  const traceVolATOM = {
-    x: t,
-    y: volATOM_idx,
-    name: 'ATOM – Volume (area, 7d index=100)',
-    type: 'scatter',
-    mode: 'lines',
-    fill: 'tozeroy',
-    xaxis: 'x2',
-    yaxis: 'y2',
-    line: { width: 3, color: COLOR_ATOM },
-    opacity: 0.2,
-    customdata: cdVolATOM,
-    hovertemplate:
-      '%{y:.2f}<br>',
-  };
-  const traceVolONE = {
-    x: t,
-    y: volONE_idx,
-    name: 'ATOMONE – Volume (area, 7d index=100)',
-    type: 'scatter',
-    mode: 'lines',
-    fill: 'tozeroy',
-    yaxis: 'y2',
-    xaxis: 'x2',
-    line: { width: 3, color: COLOR_ATOMONE },
-    opacity: 0.2,
-    customdata: cdVolONE,
-    hovertemplate:
-      '%{y:.2f}<br>',
-  };
-
-  const traceTxATOM = {
-    x: t,
-    y: txATOM_idx,
-    name: 'ATOM – Tx (bar, 7d index=100)',
-    type: 'bar',
-    yaxis: 'y2',
-    xaxis: 'x2',
-    marker: { color: COLOR_ATOM },
-    opacity: 0.4,
-    customdata: cdTxATOM,
-    hovertemplate:
-      '%{y:.2f}<br>',
-  };
-  const traceTxONE = {
-    x: t,
-    y: txONE_idx,
-    name: 'ATOMONE – Tx (bar, 7d index=100)',
-    type: 'bar',
-    yaxis: 'y2',
-    xaxis: 'x2',
-    marker: { color: COLOR_ATOMONE },
-    opacity: 0.4,
-    customdata: cdTxONE,
-    hovertemplate:
-      '%{y:.2f}<br>',
-  };
-  const traceDummyForSlider = {
-    x: t,
-    y: t.map(() => null),
-    xaxis: 'x', // <- 중요: x축에 붙여서 "이 축도 사용중" 신호
-    yaxis: 'y',
-    mode: 'lines',
-    line: { width: 0 },
-    hoverinfo: 'skip',
-    showlegend: false,
-  };
-
-  // traces
+// ===== 차트 렌더 =====
+function draw(ts, s) {
   const traces = [
-    traceDummyForSlider, // <- 맨 앞에 넣기
-    tracePriceATOM,
-    tracePriceONE,
-    traceVolATOM,
-    traceVolONE,
-    traceTxATOM,
-    traceTxONE,
+    {
+      x: ts,
+      y: s.pAtom,
+      type: 'scatter',
+      mode: 'lines',
+      name: 'ATOM Price(USD)',
+      xaxis: 'x',
+      yaxis: 'y',
+      line: { color: '#dc2626', width: 2 },
+    },
+    {
+      x: ts,
+      y: s.pOne,
+      type: 'scatter',
+      mode: 'lines',
+      name: 'ATOMONE-Price(USD)',
+      xaxis: 'x',
+      yaxis: 'y',
+      line: { color: '#2563eb', width: 2 },
+    },
+    {
+      x: ts,
+      y: s.txOne,
+      type: 'bar',
+      name: 'ATOMONE-Tx',
+      xaxis: 'x2',
+      yaxis: 'y2',
+      marker: { color: '#93c5fd' },
+    },
+    {
+      x: ts,
+      y: s.volOne,
+      type: 'bar',
+      name: 'ATOMONE-Volume',
+      xaxis: 'x2',
+      yaxis: 'y2',
+      marker: { color: '#2563eb' },
+    },
+    {
+      x: ts,
+      y: s.txAtom,
+      type: 'bar',
+      name: 'ATOM-Tx',
+      xaxis: 'x3',
+      yaxis: 'y3',
+      marker: { color: '#fca5a5' },
+    },
+    {
+      x: ts,
+      y: s.volAtom,
+      type: 'bar',
+      name: 'ATOM-Volume',
+      xaxis: 'x3',
+      yaxis: 'y3',
+      marker: { color: '#dc2626' },
+    },
   ];
 
   const layout = {
-    hovermode: 'x unified',
-    paper_bgcolor: COLOR_BG,
-    plot_bgcolor: COLOR_BG,
-    font: { color: '#f3eefc' },
-    legend: { orientation: 'h', y: -0.22, x: 0.5, xanchor: 'center' }, // 아래 중앙
-    margin: { t: 10, r: 72, b: 72, l: 72 }, // 좌우 동일 마진으로 균형
+    grid: {
+      rows: 3,
+      columns: 1,
+      pattern: 'coupled',
+      roworder: 'top to bottom',
+    },
+
     xaxis: {
+      anchor: 'y',
       type: 'date',
-      rangeslider: { visible: false }, // 미니 그래프 제거
-      // rangeselector는 쓰지 않음(HTML 버튼으로 대체)
-      tickfont: { size: 12 },
+      matches: null,
+      showticklabels: false,
+
+      // 스파이크(세로선) 설정
+      showspikes: false,
+      spikethickness: 1,
+      spikecolor: 'rgba(100,100,100,0.55)',
     },
-    yaxis: {
-      title: 'Price (actual)',
-      side: 'left',
-      zerolinecolor: 'rgba(255,255,255,.2)',
+    xaxis2: {
+      anchor: 'y2',
+      type: 'date',
+      matches: 'x',
+      showticklabels: false,
+      showspikes: false,
+      spikethickness: 1,
+      spikecolor: 'rgba(100,100,100,0.55)',
     },
+    xaxis3: {
+      anchor: 'y3',
+      type: 'date',
+      matches: 'x',
+      title: 'Time',
+
+      showspikes: false,
+      spikethickness: 1,
+      spikecolor: 'rgba(100,100,100,0.55)',
+      tickformat: '%b %Y',
+    },
+
+    yaxis: { title: 'Price', domain: [0.56, 1.0] },
     yaxis2: {
-      title: 'Activity — Volume (area) & Tx (bars) — index=100 (7d)',
-      overlaying: 'y',
-      side: 'right',
-      type: 'linear',
+      title: 'ATOMONE Activity',
+      domain: [0.3, 0.52],
+      range: [0, 2],
+      dtick: 0.5,
     },
-    barmode: 'overlay',
-  };
-
-  layout.xaxis = {
-    // 슬라이더 + 눈금 담당
-    type: 'date',
-    visible: true, // x축 눈금/라벨 보이게
-    showgrid: false,
-    tickfont: { size: 12 },
-    rangeslider: {
-      visible: true, // ✅ 슬라이더 ON
-      thickness: 0.08,
-      bgcolor: 'rgba(255,255,255,0.08)',
-      bordercolor: 'rgba(255,255,255,0.12)',
-      // 트레이스가 null이라 미니그래프는 표시되지 않음
+    yaxis3: {
+      title: 'ATOM Activity',
+      domain: [0.0, 0.26],
+      range: [0, 2],
+      dtick: 0.5,
     },
-  };
 
-  layout.xaxis2 = {
-    // 실제 그래프가 쓰는 축
-    type: 'date',
-    matches: 'x', // ✅ 슬라이더와 범위 동기화
-    anchor: 'y',
-    tickfont: { size: 12 },
-  };
+    barmode: 'stack',
+    bargap: 0.05,
+    legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: -0.15 },
 
-  // 겹침 방지 & 가운데 느낌
-  // 1) 메인 플롯을 살짝 위로 올려서(=아래에 공간 확보)
-  layout.yaxis = {
-    title: {
-      text: 'Price (actual)',
-      standoff: 24,
-      font: {
-        ...FONT_title02,
-        color: COLOR_WHITE
-      }
+    // hover 이벤트를 안정적으로 받되 기본 박스는 투명 처리
+    hovermode: 'x unified',
+    spikedistance: -1,
+    hoverlabel: {
+      bgcolor: 'rgba(255,255,255,0)',
+      bordercolor: 'rgba(0,0,0,0)',
+      font: { color: 'rgba(0,0,0,0)' },
     },
-    side: 'left', domain: [0.18, 1]
-  };
-  layout.yaxis2 = {
-    title: {
-      text: 'Activity — Volume (area) & Tx (bars) — index=100 (7d)',
-      standoff: 24,
-      font: {
-        ...FONT_title02,
-        color: COLOR_WHITE
-      }
-    },
-    overlaying: 'y',
-    side: 'right',
-    type: 'linear',
-    domain: [0.18, 1],
+
+    shapes: [], // 점선 세로선은 런타임에 추가
+    margin: { l: 60, r: 18, t: 16, b: 58 },
+    height: Math.max(window.innerHeight * 0.78, 520),
+    paper_bgcolor: '#fff',
+    plot_bgcolor: '#fff',
   };
 
-  // 2) 하단 여백을 넉넉하게 (슬라이더 + 범례 들어갈 자리)
-  layout.margin = { t: 64, r: 80, b: 170, l: 80 };
-
-  // 3) 범례 위치를 "슬라이더 아래, 가운데"로 더 내리기
-  layout.legend = {
-    orientation: 'h',
-    x: 0.5,
-    xanchor: 'center',
-    y: -0.33, // ↓ 더 내리고 싶으면 -0.36, -0.40 로 조정
-    font: { size: 12 },
-    itemsizing: 'constant',
-  };
-
-  // 4) 슬라이더는 조금 얇게(겹침 느낌 완화)
-  layout.xaxis.rangeslider = {
-    ...layout.xaxis.rangeslider,
-    visible: true,
-    thickness: 0.06, // 0.08 → 0.06
-    bgcolor: 'rgba(255,255,255,0.10)',
-    bordercolor: 'rgba(255,255,255,0.18)',
-  };
-
-  window.Plotly.newPlot('chart', traces, layout, {
+  Plotly.newPlot('chart', traces, layout, {
+    displaylogo: false,
     responsive: true,
-    scrollZoom: false,
+  }).then(() => {
+    hookInteractions();
   });
+}
 
-  // ===== 상단 컨트롤 연결 =====
-  // 1) 로그 토글
-  const logToggle = document.getElementById('logToggle');
-  logToggle.addEventListener('change', () => {
-    window.Plotly.relayout('chart', {
-      'yaxis2.type': logToggle.checked ? 'log' : 'linear',
-    });
-  });
-
-  // 2) 기간 버튼
-  const buttons = document.querySelectorAll('.btn[data-range]');
-  const setActive = (el) => {
-    buttons.forEach((b) => b.classList.toggle('active', b === el));
-  };
-  const days = (n) => 24 * 3600 * 1000 * n;
-
-  buttons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      setActive(btn);
-      const key = btn.dataset.range;
-      if (key === 'all') {
-        window.Plotly.relayout('chart', { 'xaxis.range': [tMin, tMax] });
-      } else {
-        const n = parseInt(key, 10); // 30 / 90 / 180
-        const end = tMax;
-        const start = new Date(+end - days(n));
-        window.Plotly.relayout('chart', { 'xaxis.range': [start, end] });
-      }
-    });
-  });
-
-  // 도움말 팝오버
-  const helpBtn = document.getElementById('helpBtn');
-  const pop = document.getElementById('helpPopover');
-
-  function closePop(e) {
-    if (!pop.contains(e.target) && e.target !== helpBtn) {
-      pop.classList.remove('open');
-      helpBtn.classList.remove('is-open');
-      helpBtn.setAttribute('aria-expanded', 'false');
-      document.removeEventListener('click', closePop);
-    }
+function hookInteractions() {
+  const el = document.getElementById('chart');
+  let vline = el.querySelector('.vline');
+  if (!vline) {
+    vline = document.createElement('div');
+    vline.className = 'vline';
+    el.appendChild(vline);
   }
-
-  helpBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const willOpen = !pop.classList.contains('open');
-
-    if (willOpen) {
-      pop.classList.add('open');
-      helpBtn.classList.add('is-open');
-      helpBtn.setAttribute('aria-expanded', 'true');
-      document.addEventListener('click', closePop);
-    } else {
-      pop.classList.remove('open');
-      helpBtn.classList.remove('is-open');
-      helpBtn.setAttribute('aria-expanded', 'false');
-      document.removeEventListener('click', closePop);
+  // 없으면 자동 생성
+  function ensureBox(id) {
+    let n = document.getElementById(id);
+    if (!n) {
+      n = document.createElement('div');
+      n.id = id;
+      n.className = 'ttbox';
+      n.style.display = 'none';
+      el.appendChild(n);
+    } else if (n.parentElement !== el) {
+      n.parentElement.removeChild(n);
+      el.appendChild(n);
     }
+    return n;
+  }
+  const box1 = ensureBox('tt-row1');
+  const box2 = ensureBox('tt-row2');
+  const box3 = ensureBox('tt-row3');
+
+  // 각 subplot의 세로 중앙에 박스 위치
+  function placeBoxes() {
+    const rect = el.getBoundingClientRect();
+    const fl = el._fullLayout;
+    if (!fl) return;
+
+    const h = rect.height;
+    const topFromDomain = (domainTop) => (1 - domainTop) * h + 8;
+
+    const top1 = topFromDomain(fl.yaxis.domain[1]); // Row1
+    const top2 = topFromDomain(fl.yaxis2.domain[1]); // Row2
+    const top3 = topFromDomain(fl.yaxis3.domain[1]); // Row3
+
+    document.getElementById('tt-row1').style.top = `${top1}px`;
+    document.getElementById('tt-row2').style.top = `${top2}px`;
+    document.getElementById('tt-row3').style.top = `${top3}px`;
+  }
+  el.on('plotly_hover', (ev) => {
+    if (!ev.points || !ev.points.length) return;
+
+    const xVal = new Date(ev.points[0].x).getTime();
+    const i = G.ts.findIndex((t) => t.getTime() === xVal);
+    if (i < 0) return;
+
+    renderRowBoxes(i);
+
+    const ids = ['tt-row1', 'tt-row2', 'tt-row3'];
+    ids.forEach((id) => {
+      const n = document.getElementById(id);
+      n.style.display = 'block';
+      n.style.opacity = '1';
+    });
+
+    // 3) x 위치(세로선) 따라다니게: 마우스 좌표 → chart 내부 left
+    const rect = el.getBoundingClientRect();
+    const mouseX = ev.event.clientX - rect.left; // 커서 x (chart 기준)
+    const maxW = 320; // .ttbox max-width와 맞춤
+    const pad = 12; // 세로선에서 살짝 띄우기
+    const left = Math.max(6, Math.min(mouseX + pad, rect.width - maxW - 6));
+    ids.forEach((id) => {
+      const n = document.getElementById(id);
+      n.style.left = `${left}px`;
+      n.style.right = 'auto';
+    });
+    vline.style.left = `${Math.max(0, Math.min(mouseX, rect.width))}px`;
+    vline.style.display = 'block';
+    // 4) y(세로 스택) 위치는 도메인 기반으로 고정
+    placeBoxes();
   });
-  // 초기 범위: all
-  window.Plotly.relayout('chart', { 'xaxis.range': [tMin, tMax] });
+
+  el.on('plotly_unhover', () => {
+    ['tt-row1', 'tt-row2', 'tt-row3'].forEach((id) => {
+      const n = document.getElementById(id);
+      n.style.opacity = '0';
+      n.style.display = 'none';
+    });
+
+    // 기간 버튼(제목 아래)
+    document.querySelectorAll('#rangeBtns .btn').forEach((btn) => {
+      btn.addEventListener('click', () => applyRange(btn.dataset.range));
+    });
+  });
+
+  // ===== 행별 박스(3개) 내용 =====
+  function renderRowBoxes(i) {
+    const { s, ts } = G;
+    const dateStr = new Date(ts[i]).toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
+
+    // Row1: Price
+    document.getElementById('tt-row1').innerHTML = `
+    <div class="title">날짜: ${dateStr} <span class="muted">(UTC)</span></div>
+    <div>ATOM Price: $ ${fmt2(s.pAtom[i])}</div>
+    <div>ATOMONE Price: $ ${fmt2(s.pOne[i])}</div>
+  `;
+
+    // Row2: ATOMONE
+    const oneSum = (s.txOne[i] ?? 0) + (s.volOne[i] ?? 0);
+    document.getElementById('tt-row2').innerHTML = `
+    <div class="title">Row2 (ATOMONE)</div>
+    ${
+      s.txOne7?.[i] != null
+        ? `<div>Tx (7d): ${fmtInt.format(s.txOne7[i])}</div>`
+        : ''
+    }
+    <div>Tx_norm: ${fmt2(s.txOne[i])}</div>
+    ${
+      s.volOne7?.[i] != null
+        ? `<div>Volume (7d): ${fmtInt.format(s.volOne7[i])}</div>`
+        : ''
+    }
+    <div>Volume_norm: ${fmt2(s.volOne[i])}</div>
+    <div>ActivitySum (Tx_norm + Volume_norm): ${fmt2(oneSum)}</div>
+  `;
+
+    // Row3: ATOM
+    const atomSum = (s.txAtom[i] ?? 0) + (s.volAtom[i] ?? 0);
+    document.getElementById('tt-row3').innerHTML = `
+    <div class="title">Row3 (ATOM)</div>
+    ${
+      s.txAtom7?.[i] != null
+        ? `<div>Tx (7d): ${fmtInt.format(s.txAtom7[i])}</div>`
+        : ''
+    }
+    <div>Tx_norm: ${fmt2(s.txAtom[i])}</div>
+    ${
+      s.volAtom7?.[i] != null
+        ? `<div>Volume (7d): ${fmtInt.format(s.volAtom7[i])}</div>`
+        : ''
+    }
+    <div>Volume_norm: ${fmt2(s.volAtom[i])}</div>
+    <div>ActivitySum: ${fmt2(atomSum)}</div>
+  `;
+  }
+}
+// ===== 기간 버튼 동작 =====
+function applyRange(kind) {
+  const el = document.getElementById('chart');
+  if (kind === 'all') {
+    Plotly.relayout(el, {
+      'xaxis.autorange': true,
+      'xaxis2.autorange': true,
+      'xaxis3.autorange': true,
+    });
+    return;
+  }
+  const days = parseInt(kind, 10);
+  const end = G.xMax;
+  const start = new Date(end.getTime() - days * 24 * 60 * 60 * 1000);
+  Plotly.relayout(el, {
+    'xaxis.range': [start, end],
+    'xaxis2.range': [start, end],
+    'xaxis3.range': [start, end],
+  });
+}
+
+// ---- boot: CSV 자동 로드 ----
+(async function boot() {
+  try {
+    const res = await fetch(CSV_PATH);
+    const text = await res.text();
+    parseCSVAndDraw(text);
+  } catch (e) {
+    console.error(e);
+    alert(
+      'CSV 자동 로드 실패: Live Server(HTTP)로 열려 있는지, 그리고 ./data/atomone_cosmos_data_final.csv 경로가 맞는지 확인해주세요.'
+    );
+  }
 })();
+
+// help modal
+const dlg = document.getElementById('help');
+document
+  .getElementById('helpBtn')
+  .addEventListener('click', () => dlg.showModal());
+document
+  .getElementById('closeHelp')
+  .addEventListener('click', () => dlg.close());
+
+// resize
+window.addEventListener('resize', () => Plotly.Plots.resize('chart'));

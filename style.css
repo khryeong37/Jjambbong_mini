@@ -1,0 +1,167 @@
+:root {
+  --fg: #0f172a;
+  --muted: #475569;
+  --grid: #e2e8f0;
+  --bg: #fff;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  padding: 16px;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+    Noto Sans, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  color: var(--fg);
+  background: var(--bg);
+}
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+h1 {
+  font-size: 22px;
+  margin: 0;
+  font-weight: 700;
+}
+.sub {
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.btn {
+  border: 1px solid var(--grid);
+  background: #fff;
+  color: #111;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.btn:hover {
+  background: #f8fafc;
+}
+.legend-note {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 8px 2px 12px;
+}
+#chart {
+  position: relative;
+}
+.vline {
+  position: absolute;
+  top: 0;
+  bottom: 0; /* 전체 높이 관통 */
+  width: 0;
+  border-left: 1px dotted rgba(100, 100, 100, 0.55);
+  pointer-events: none;
+  z-index: 10000;
+  display: none;
+}
+/* 행별 툴팁 박스 */
+.ttbox {
+  position: absolute;
+  right: auto;
+  min-width: 240px;
+  max-width: 320px;
+  background: #fff;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  line-height: 1.35;
+  pointer-events: none;
+  z-index: 10000;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+/* modal */
+dialog#help {
+  width: min(680px, 92vw);
+  border: 1px solid var(--grid);
+  border-radius: 16px;
+  padding: 18px;
+}
+dialog#help::backdrop {
+  background: rgba(0, 0, 0, 0.25);
+}
+.help-title {
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+.help-p {
+  font-size: 13px;
+  color: #111827;
+  margin: 6px 0;
+}
+.kbd {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 12px;
+  background: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+/* 기간 버튼: 제목 아래 왼쪽 정렬 */
+.range-btns {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+.btn.sm {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+/* 커스텀 툴팁 */
+.tooltip {
+  position: fixed;
+  right: 18px;
+  top: 82px;
+  max-width: 320px;
+  background: #fff;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  line-height: 1.35;
+  pointer-events: none;
+  z-index: 9;
+}
+.tooltip .tt-title {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.tooltip .tt-sec {
+  margin: 6px 0 0;
+}
+.tooltip .muted {
+  color: #475569;
+}
+.tooltip b {
+  font-weight: 700;
+}
+
+.ttbox .title {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.ttbox .muted {
+  color: #475569;
+}
