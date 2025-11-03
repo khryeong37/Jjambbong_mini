@@ -116,6 +116,7 @@ function draw(ts, s) {
       xaxis: 'x',
       yaxis: 'y',
       line: { color: '#dc2626', width: 2 },
+      hoverinfo: 'none',
     },
     {
       x: ts,
@@ -126,6 +127,7 @@ function draw(ts, s) {
       xaxis: 'x',
       yaxis: 'y',
       line: { color: '#2563eb', width: 2 },
+      hoverinfo: 'none',
     },
     {
       x: ts,
@@ -135,6 +137,7 @@ function draw(ts, s) {
       xaxis: 'x2',
       yaxis: 'y2',
       marker: { color: '#93c5fd' },
+      hoverinfo: 'none',
     },
     {
       x: ts,
@@ -144,6 +147,7 @@ function draw(ts, s) {
       xaxis: 'x2',
       yaxis: 'y2',
       marker: { color: '#2563eb' },
+      hoverinfo: 'none',
     },
     {
       x: ts,
@@ -153,6 +157,7 @@ function draw(ts, s) {
       xaxis: 'x3',
       yaxis: 'y3',
       marker: { color: '#fca5a5' },
+      hoverinfo: 'none',
     },
     {
       x: ts,
@@ -162,6 +167,7 @@ function draw(ts, s) {
       xaxis: 'x3',
       yaxis: 'y3',
       marker: { color: '#dc2626' },
+      hoverinfo: 'none',
     },
   ];
 
