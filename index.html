@@ -1,51 +1,64 @@
 <!DOCTYPE html>
 <html lang="ko">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ATOMONE vs COSMOS — Price + Activity</title>
-    <link rel="stylesheet" href="./style.css" />
-    <!-- CDN -->
-    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  </head>
-  <body>
-    <header>
-      <div>
-        <h1>ATOM vs ATOMONE — Price (top) + Activity (below)</h1>
-        <div class="sub">
-          Row1: Price (actual, USD) Row2: ATOMONE — Activity = Tx (lower) +
-          Volume (upper) Row3: ATOM — Activity = Tx (lower) + Volume (upper)
-        </div>
-        <div id="rangeBtns" class="range-btns">
-          <button data-range="30" class="btn sm">30d</button>
-          <button data-range="90" class="btn sm">90d</button>
-          <button data-range="180" class="btn sm">180d</button>
-          <button data-range="all" class="btn sm">All</button>
-        </div>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ATOMONE vs COSMOS — Price + Activity</title>
+  <link rel="stylesheet" href="./style.css" />
+  <!-- CDN -->
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+</head>
+
+<body>
+  <!-- 헤더: 제목/설명만 -->
+  <header class="page-header">
+    <div class="header-main">
+      <h1 class="title01">ATOM vs ATOMONE — Price (top) + Activity (below)</h1>
+      <div class="sub">
+        Row1: Price (actual, USD) Row2: ATOMONE — Activity = Tx (lower) + Volume (upper)
+        Row3: ATOM — Activity = Tx (lower) + Volume (upper)
       </div>
-      <div class="controls">
-        <button class="btn" id="helpBtn">도움말 ❔</button>
-      </div>
-    </header>
-    <div id="chart">
-      <div id="tt-row1" class="ttbox" style="display: none"></div>
-      <div id="tt-row2" class="ttbox" style="display: none"></div>
-      <div id="tt-row3" class="ttbox" style="display: none"></div>
+    </div>
+  </header>
+
+  <!-- 바디 최상단 섹션: 범위버튼(왼쪽) + Help(오른쪽) -->
+  <section class="toolbar" aria-label="Chart controls">
+    <div id="rangeBtns" class="range-btns">
+      <button data-range="30" class="btn sm">30d</button>
+      <button data-range="90" class="btn sm">90d</button>
+      <button data-range="180" class="btn sm">180d</button>
+      <button data-range="all" class="btn sm">all</button>
     </div>
 
-    <dialog id="help">
-      <p class="help-title">해석 가이드(요약)</p>
-      <p class="help-p">
-        Tx_norm = minmax(sum(Tx, 7d)) <br />
-        Volume_norm = minmax(sum(Volume, 7d)) <br />
-        ActivitySum = Tx_norm + Volume_norm (0–2)
-      </p>
-      <div style="display: flex; justify-content: flex-end; margin-top: 10px">
-        <button class="btn" id="closeHelp">닫기</button>
-      </div>
-    </dialog>
+    <div class="toolbar-side">
+      <div class="help-wrapper">
+        <button id="helpBtn" class="icon-btn help" aria-label="도움말" aria-haspopup="dialog" aria-controls="helpPop"
+          aria-expanded="false"></button>
 
-    <script src="./scripts/visualization.js"></script>
-  </body>
+        <div id="helpPop" class="help-popover" role="dialog" aria-labelledby="helpTitle">
+          <div class="help-popover__content">
+            <p id="helpTitle" class="help-title">How It’s Calculated</p>
+            <p class="help-p">
+              Tx_norm = minmax (sum(Tx, 7d))<br />
+              Volume_norm = minmax (sum(Volume, 7d))<br />
+              ActivitySum = Tx_norm + Volume_norm (0–2)
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 차트 -->
+  <div id="chart">
+    <div id="tt-row1" class="ttbox" style="display:none"></div>
+    <div id="tt-row2" class="ttbox" style="display:none"></div>
+    <div id="tt-row3" class="ttbox" style="display:none"></div>
+  </div>
+
+  <script src="./scripts/visualization.js"></script>
+</body>
+
 </html>

@@ -1,167 +1,407 @@
+/* ========= Base ========= */
 :root {
-  --fg: #0f172a;
-  --muted: #475569;
-  --grid: #e2e8f0;
-  --bg: #fff;
+  --static-white: #FFFFFF;
+  --static-bg: #F6F7FB;
+  --primary-black: #171717;
+  --primary-gray: #EDEDED;
+  --primary-deep: #44404B;
+  --data-atom-pr: #FF482F;
+  --data-one-pr: #096EFF;
+  --data-atom-vol: #FF5D47;
+  --data-atom-tx: #FFAEA3;
+  --data-one-vol: #4994FF;
+  --data-one-tx: #A7CBFF;
+  --fg: var(--primary-black);
+  --muted: var(--primary-deep);
+  --grid: var(--primary-gray);
+  --bg: var(--static-bg);
+  --fs-title01: 20px;
+  --fs-title02: 16px;
+  --fs-title03: 14px;
+  --fs-title04: 12px;
+  --fs-label01: 14px;
+  --fs-body01: 16px;
+  --fs-body02: 10px;
+  --fs-body03: 12px;
+  --fs-body04: 10px;
+  --lh-135: 1.35;
+  --lh-130: 1.30;
 }
+
+/* weight utils */
+.fw-b {
+  font-weight: 700;
+}
+
+.fw-sb {
+  font-weight: 600;
+}
+
+.fw-m {
+  font-weight: 500;
+}
+
+.fw-r {
+  font-weight: 400;
+}
+
+/* Body: 하나로 통합 */
+body {
+  margin: 0;
+  padding: 24px 40px;
+  height: 100%;
+  font-family: 'Noto Sans', sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: var(--lh-135);
+  letter-spacing: 0;
+  background: var(--bg);
+  color: var(--fg);
+}
+
 * {
   box-sizing: border-box;
 }
-html,
-body {
-  height: 100%;
+
+/* ========= Header layout ========= */
+.page-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: 4px 16px;
+  margin-bottom: 12px;
 }
-body {
-  margin: 0;
-  padding: 16px;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
-    Noto Sans, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-  color: var(--fg);
-  background: var(--bg);
+
+.header-main {
+  display: grid;
+  grid-auto-rows: max-content;
+  gap: 4px;
 }
-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 10px;
+
+.header-side {
+  position: sticky;
+  top: 16px;
+  z-index: 2000;
 }
-h1 {
-  font-size: 22px;
-  margin: 0;
-  font-weight: 700;
+
+/* 상단 고정 역할 */
+.help-wrapper {
+  position: relative;
+  display: inline-flex;
 }
+
+/* 팝오버 기준점 */
+
+/* Sub text */
 .sub {
   font-size: 14px;
   color: var(--muted);
-  margin-top: 4px;
 }
-.controls {
+
+/* 바디 최상단 툴바: 좌측 버튼 / 우측 Help */
+.toolbar {
   display: flex;
-  gap: 8px;
+  /* ← 핵심: flex로 양끝 배치 */
   align-items: center;
+  column-gap: 16px;
+  margin-bottom: 12px;
+  /* 필요하면 폭 제한
+  max-width: 1160px;
+  margin-inline: auto;
+  */
 }
+
+/* 왼쪽 버튼 묶음 */
+.toolbar .range-btns {
+  display: flex;
+  gap: 6px;
+  flex: 1 1 auto;
+  /* 남는 폭 차지 */
+  min-width: 0;
+}
+
+/* 오른쪽 Help를 끝으로 밀기 */
+.toolbar-side {
+  margin-left: auto;
+  /* ← 오른쪽 정렬 */
+  flex: 0 0 auto;
+  position: relative;
+  /* sticky 쓰고 싶으면 sticky로 바꿔 */
+  z-index: 20000;
+}
+
+.help-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.help-popover {
+  z-index: 20001;
+}
+
+/* 차트보다 위 */
+#chart {
+  position: relative;
+  z-index: 1;
+}
+
+/* 버튼 줄바꿈 방지(라벨 깨짐 방지) */
 .btn {
-  border: 1px solid var(--grid);
-  background: #fff;
-  color: #111;
+  white-space: nowrap;
+}
+
+/* 반응형: 좁은 화면에선 줄바꿈 */
+@media (max-width: 560px) {
+  .toolbar {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .toolbar-side {
+    order: 2;
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    margin-left: 0;
+  }
+}
+
+/* ========= Typography ========= */
+.title01 {
+  font-size: var(--fs-title01);
+  line-height: var(--lh-135);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.title02 {
+  font-size: var(--fs-title02);
+  line-height: var(--lh-135);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.title03 {
+  font-size: var(--fs-title03);
+  line-height: var(--lh-135);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.title04 {
+  font-size: var(--fs-title04);
+  line-height: var(--lh-130);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.label01 {
+  font-size: var(--fs-label01);
+  line-height: var(--lh-135);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.body01 {
+  font-size: var(--fs-body01);
+  line-height: var(--lh-135);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.body02 {
+  font-size: var(--fs-body02);
+  line-height: var(--lh-135);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.body03 {
+  font-size: var(--fs-body03);
+  line-height: 1.30;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.body04 {
+  font-size: var(--fs-body04);
+  line-height: 1.30;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+/* ========= Buttons ========= */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 8px 10px;
   border-radius: 10px;
-  font-size: 12px;
+  border: 1px solid var(--grid);
+  background: var(--static-white);
+  color: var(--primary-black);
+  font-size: var(--fs-label01);
+  font-weight: 600;
   cursor: pointer;
 }
+
+.btn.sm {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
 .btn:hover {
   background: #f8fafc;
 }
+
+.icon-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background-color: var(--static-white);
+  background-position: center;
+  background-repeat: no-repeat;
+  cursor: pointer;
+  transition: transform .1s ease;
+}
+
+#helpBtn.help {
+  background-image: url('./assets/icon_help_default.svg');
+}
+
+#helpBtn.help:not(.is-open):hover {
+  background-image: url('./assets/icon_help_hover.svg');
+  transform: scale(1.05);
+}
+
+#helpBtn.help.is-open {
+  background-image: url('./assets/icon_help_pressed.svg');
+  transform: scale(0.95);
+}
+
+.icon-btn:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid #94a3b8;
+  outline-offset: 2px;
+}
+
+/* ========= Help popover ========= */
+.help-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 20px 24px;
+  min-width: 360px;
+  max-width: 382px;
+  border-radius: 12px;
+  background: var(--static-white);
+  box-shadow: 0 0 20px rgba(0, 0, 0, .15);
+  white-space: normal;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .12s ease;
+  z-index: 2001;
+}
+
+.help-popover.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.help-popover>* {
+  margin: 0;
+}
+
+.help-title {
+  color: var(--primary-black);
+  font-size: var(--fs-title02);
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.help-p {
+  color: var(--primary-black);
+  font-size: var(--fs-body01);
+  font-weight: 400;
+  line-height: 1.45;
+  margin: 6px 0;
+}
+
+/* ========= Chart / Tooltip ========= */
 .legend-note {
   font-size: 11px;
   color: var(--muted);
   margin: 8px 2px 12px;
 }
+
 #chart {
   position: relative;
+  z-index: 1;
 }
+
 .vline {
   position: absolute;
-  top: 0;
-  bottom: 0; /* 전체 높이 관통 */
+  top: 16px;
+  bottom: 64px;
   width: 0;
-  border-left: 1px dotted rgba(100, 100, 100, 0.55);
+  border-left: 2px dotted rgba(181, 181, 181, 1);
   pointer-events: none;
   z-index: 10000;
   display: none;
 }
-/* 행별 툴팁 박스 */
-.ttbox {
-  position: absolute;
-  right: auto;
-  min-width: 240px;
-  max-width: 320px;
-  background: #fff;
-  color: #0f172a;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 10px 12px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-  font-size: 12px;
-  line-height: 1.35;
-  pointer-events: none;
-  z-index: 10000;
-  opacity: 0;
-  transition: opacity 0.12s ease;
-}
-/* modal */
-dialog#help {
-  width: min(680px, 92vw);
-  border: 1px solid var(--grid);
-  border-radius: 16px;
-  padding: 18px;
-}
-dialog#help::backdrop {
-  background: rgba(0, 0, 0, 0.25);
-}
-.help-title {
-  font-weight: 700;
-  margin: 0 0 8px;
-}
-.help-p {
-  font-size: 13px;
-  color: #111827;
-  margin: 6px 0;
-}
-.kbd {
-  font-family: ui-monospace, Menlo, Consolas, monospace;
-  font-size: 12px;
-  background: #f1f5f9;
-  padding: 2px 6px;
-  border-radius: 6px;
-  border: 1px solid #e2e8f0;
-}
-/* 기간 버튼: 제목 아래 왼쪽 정렬 */
-.range-btns {
-  display: flex;
-  gap: 6px;
-  margin-top: 8px;
-}
-.btn.sm {
-  padding: 6px 10px;
-  font-size: 12px;
-}
-/* 커스텀 툴팁 */
-.tooltip {
+
+.kv-tooltip {
   position: fixed;
-  right: 18px;
-  top: 82px;
-  max-width: 320px;
-  background: #fff;
-  color: #0f172a;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 10px 12px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-  font-size: 12px;
-  line-height: 1.35;
+  width: 262px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  border-radius: 12px;
+  background: var(--static-white);
+  box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.15);
+  z-index: 99999;
+  color: var(--primary-black);
   pointer-events: none;
-  z-index: 9;
-}
-.tooltip .tt-title {
-  font-weight: 700;
-  margin-bottom: 6px;
-}
-.tooltip .tt-sec {
-  margin: 6px 0 0;
-}
-.tooltip .muted {
-  color: #475569;
-}
-.tooltip b {
-  font-weight: 700;
+  opacity: 0;
+  transition: opacity .12s ease, transform .12s ease;
+  transform: translateY(4px);
 }
 
-.ttbox .title {
-  font-weight: 700;
-  margin-bottom: 6px;
+.kv-tooltip.is-show {
+  opacity: 1;
+  transform: translateY(0);
 }
-.ttbox .muted {
-  color: #475569;
+
+.kv-tooltip-inner {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kv-title04 {
+  font-size: var(--fs-title04);
+  font-weight: 600;
+  /* title04_sb_12 */
+  line-height: var(--lh-130);
+  color: var(--primary-black);
+}
+
+.kv-body04 {
+  font-size: var(--fs-body04);
+  font-weight: 400;
+  line-height: var(--lh-130);
+  color: var(--primary-black);
+}
+
+.kv-muted {
+  color: var(--primary-deep);
+  font-weight: 400;
 }
