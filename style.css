@@ -69,7 +69,12 @@ body {
   grid-template-columns: 1fr auto;
   align-items: start;
   gap: 4px 16px;
-  margin-bottom: 12px;
+  padding-bottom: 12px;
+
+  background: var(--static-white);
+  border-bottom: 2px solid var(--primary-gray);
+  margin: -24px -40px;
+  padding: 16px 40px;
 }
 
 .header-main {
@@ -88,27 +93,15 @@ body {
 .help-wrapper {
   position: relative;
   display: inline-flex;
-}
-
-/* 팝오버 기준점 */
-
-/* Sub text */
-.sub {
-  font-size: 14px;
-  color: var(--muted);
+  margin-top: 16px;
 }
 
 /* 바디 최상단 툴바: 좌측 버튼 / 우측 Help */
 .toolbar {
   display: flex;
-  /* ← 핵심: flex로 양끝 배치 */
   align-items: center;
   column-gap: 16px;
   margin-bottom: 12px;
-  /* 필요하면 폭 제한
-  max-width: 1160px;
-  margin-inline: auto;
-  */
 }
 
 /* 왼쪽 버튼 묶음 */
@@ -116,17 +109,14 @@ body {
   display: flex;
   gap: 6px;
   flex: 1 1 auto;
-  /* 남는 폭 차지 */
   min-width: 0;
 }
 
 /* 오른쪽 Help를 끝으로 밀기 */
 .toolbar-side {
   margin-left: auto;
-  /* ← 오른쪽 정렬 */
   flex: 0 0 auto;
   position: relative;
-  /* sticky 쓰고 싶으면 sticky로 바꿔 */
   z-index: 20000;
 }
 
@@ -139,13 +129,11 @@ body {
   z-index: 20001;
 }
 
-/* 차트보다 위 */
 #chart {
   position: relative;
   z-index: 1;
 }
 
-/* 버튼 줄바꿈 방지(라벨 깨짐 방지) */
 .btn {
   white-space: nowrap;
 }
@@ -170,6 +158,7 @@ body {
 .title01 {
   font-size: var(--fs-title01);
   line-height: var(--lh-135);
+  margin: 0;
   font-weight: 700;
   letter-spacing: 0;
 }
@@ -238,8 +227,7 @@ body {
   color: var(--primary-deep);
   background: var(--static-white);
   border: 2px solid var(--grid);
-  border-radius: 999px;
-  /* pill 형태 */
+  border-radius: 8px;
   padding: 8px 14px;
   cursor: pointer;
   transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
