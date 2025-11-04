@@ -230,6 +230,9 @@ function hookInteractions() {
   const kv1 = ensureKV('kv-row1');
   const kv2 = ensureKV('kv-row2');
   const kv3 = ensureKV('kv-row3');
+  const fmtIntOrDash = (v) => (v == null || isNaN(v) ? '—' : fmtInt.format(v));
+  const fmtNumOrDash = (v) => (v == null || isNaN(v) ? '—' : Number(v).toFixed(2));
+
 
   // ===== 위치 계산 유틸 =====
   function placeKVBoxes(mouseClientX) {
@@ -281,11 +284,11 @@ function hookInteractions() {
     kv2.innerHTML = `
   <div class="kv-tooltip-inner">
     <div class="kv-title04">ATOM</div>
-    ${s.txAtom7?.[i] != null ? `<div class="kv-body04">Tx (7d): ${fmtInt.format(s.txAtom7[i])}</div>` : ''}
-    <div class="kv-body04">Tx_norm: ${fmt2(s.txAtom[i])}</div>
-    ${s.volAtom7?.[i] != null ? `<div class="kv-body04">Volume (7d): ${fmtInt.format(s.volAtom7[i])}</div>` : ''}
-    <div class="kv-body04">Volume_norm: ${fmt2(s.volAtom[i])}</div>
-    <div class="kv-body04">ActivitySum (Tx_norm + Volume_norm): ${fmt2(atomSum)}</div>
+    <div class="kv-body04">Tx (7d): ${fmtIntOrDash(s.txAtom7?.[i])}</div>
+    <div class="kv-body04">Tx_norm: ${fmtNumOrDash(s.txAtom[i])}</div>
+    <div class="kv-body04">Volume (7d): ${fmtIntOrDash(s.volAtom7?.[i])}</div>
+    <div class="kv-body04">Volume_norm: ${fmtNumOrDash(s.volAtom[i])}</div>
+    <div class="kv-body04">ActivitySum (Tx_norm + Volume_norm): ${fmtNumOrDash(atomSum)}</div>
   </div>
 `;
 
@@ -294,11 +297,11 @@ function hookInteractions() {
     kv3.innerHTML = `
   <div class="kv-tooltip-inner">
     <div class="kv-title04">ATOMONE</div>
-    ${s.txOne7?.[i] != null ? `<div class="kv-body04">Tx (7d): ${fmtInt.format(s.txOne7[i])}</div>` : ''}
-    <div class="kv-body04">Tx_norm: ${fmt2(s.txOne[i])}</div>
-    ${s.volOne7?.[i] != null ? `<div class="kv-body04">Volume (7d): ${fmtInt.format(s.volOne7[i])}</div>` : ''}
-    <div class="kv-body04">Volume_norm: ${fmt2(s.volOne[i])}</div>
-    <div class="kv-body04">ActivitySum (Tx_norm + Volume_norm): ${fmt2(oneSum)}</div>
+    <div class="kv-body04">Tx (7d): ${fmtIntOrDash(s.txOne7?.[i])}</div>
+    <div class="kv-body04">Tx_norm: ${fmtNumOrDash(s.txOne[i])}</div>
+    <div class="kv-body04">Volume (7d): ${fmtIntOrDash(s.volOne7?.[i])}</div>
+    <div class="kv-body04">Volume_norm: ${fmtNumOrDash(s.volOne[i])}</div>
+    <div class="kv-body04">ActivitySum (Tx_norm + Volume_norm): ${fmtNumOrDash(oneSum)}</div>
   </div>
 `;
   }

@@ -48,7 +48,7 @@
 /* Body: 하나로 통합 */
 body {
   margin: 0;
-  padding: 24px 40px;
+  padding: 0px 40px 24px;
   height: 100%;
   font-family: 'Noto Sans', sans-serif;
   font-weight: 400;
@@ -73,7 +73,7 @@ body {
 
   background: var(--static-white);
   border-bottom: 2px solid var(--primary-gray);
-  margin: -24px -40px;
+  margin: 0 -40px;
   padding: 16px 40px;
 }
 
@@ -93,7 +93,7 @@ body {
 .help-wrapper {
   position: relative;
   display: inline-flex;
-  margin-top: 16px;
+  margin-top: 24px;
 }
 
 /* 바디 최상단 툴바: 좌측 버튼 / 우측 Help */
@@ -116,6 +116,7 @@ body {
 .toolbar-side {
   margin-left: auto;
   flex: 0 0 auto;
+  top: -4px;
   position: relative;
   z-index: 20000;
 }
@@ -225,7 +226,7 @@ body {
   font-size: var(--fs-label01);
   font-weight: 600;
   color: var(--primary-deep);
-  background: var(--static-white);
+  background: var(--static-bg);
   border: 2px solid var(--grid);
   border-radius: 8px;
   padding: 8px 14px;
@@ -289,8 +290,8 @@ body {
   align-items: flex-start;
   gap: 20px;
   padding: 20px 24px;
-  min-width: 360px;
-  max-width: 382px;
+  min-width: 392px;
+  max-width: 400px;
   border-radius: 12px;
   background: var(--static-white);
   box-shadow: 0 0 20px rgba(0, 0, 0, .15);
@@ -321,8 +322,8 @@ body {
   color: var(--primary-black);
   font-size: var(--fs-body01);
   font-weight: 400;
-  line-height: 1.45;
-  margin: 6px 0;
+  line-height: 2;
+  margin: 16px 0;
 }
 
 /* ========= Chart / Tooltip ========= */
