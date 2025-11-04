@@ -137,13 +137,31 @@ function draw(ts, s) {
   const layout = {
     grid: { rows: 3, columns: 1, pattern: 'coupled', roworder: 'top to bottom' },
 
+    font: {
+      family: 'Noto Sans',
+      color: '#171717'
+    },
+
     xaxis: { anchor: 'y', type: 'date', matches: null, showticklabels: false, showspikes: false, spikethickness: 1, spikecolor: 'rgba(100,100,100,0.55)' },
     xaxis2: { anchor: 'y2', type: 'date', matches: 'x', showticklabels: false, showspikes: false, spikethickness: 1, spikecolor: 'rgba(100,100,100,0.55)' },
     xaxis3: { anchor: 'y3', type: 'date', matches: 'x', showspikes: false, spikethickness: 1, spikecolor: 'rgba(100,100,100,0.55)', tickformat: '%b %Y' },
 
-    yaxis: { title: 'Price', domain: [0.56, 1.0] },
-    yaxis2: { title: 'ATOMONE Activity', domain: [0.30, 0.52], range: [0, 2], dtick: 0.5 },
-    yaxis3: { title: 'ATOM Activity', domain: [0.00, 0.26], range: [0, 2], dtick: 0.5 },
+    yaxis: {
+      title: 'Price',
+      font: { size: 10, family: 'Noto Sans', color: '#171717', weight: 600 },
+      tickfont: { size: 12, family: 'Noto Sans', color: '#171717' }, domain: [0.56, 1.0]
+    },
+    yaxis2: {
+      title: 'ATOM Activity',
+      font: { size: 10, family: 'Noto Sans', color: '#171717', weight: 600 },
+      tickfont: { size: 10, family: 'Noto Sans', color: '#171717' },
+      domain: [0.30, 0.52], range: [0, 2], dtick: 0.5
+    },
+    yaxis3: {
+      title: 'ATOMONE Activity',
+      font: { size: 10, family: 'Noto Sans', color: '#171717', weight: 600 },
+      tickfont: { size: 10, family: 'Noto Sans', color: '#171717' }, domain: [0.00, 0.26], range: [0, 2], dtick: 0.5
+    },
 
     barmode: 'stack',
     bargap: 0.05,
@@ -203,9 +221,9 @@ function hookInteractions() {
     if (!n) {
       n = document.createElement('div');
       n.id = id;
-      n.className = 'kv-tooltip';        // ← 네가 정의한 카드 스타일 클래스
+      n.className = 'kv-tooltip';
       n.style.opacity = '0';
-      document.body.appendChild(n);      // fixed 포지셔닝이라 body에 붙임
+      document.body.appendChild(n);
     }
     return n;
   }
@@ -252,9 +270,9 @@ function hookInteractions() {
     // Row1: Price
     kv1.innerHTML = `
   <div class="kv-tooltip-inner">
-    <div class="kv-title04">${dateStr} <span class="kv-muted">(UTC)</span></div>
-    <div class="kv-body04"><b>ATOM Price:</b> $ ${fmt2(s.pAtom[i])}</div>
-    <div class="kv-body04"><b>ATOMONE Price:</b> $ ${fmt2(s.pOne[i])}</div>
+    <div class="kv-title04">${dateStr}(UTC)</div>
+    <div class="kv-body04">ATOM Price: $ ${fmt2(s.pAtom[i])}</div>
+    <div class="kv-body04">ATOMONE Price: $ ${fmt2(s.pOne[i])}</div>
   </div>
 `;
 
@@ -267,7 +285,7 @@ function hookInteractions() {
     <div class="kv-body04">Tx_norm: ${fmt2(s.txAtom[i])}</div>
     ${s.volAtom7?.[i] != null ? `<div class="kv-body04">Volume (7d): ${fmtInt.format(s.volAtom7[i])}</div>` : ''}
     <div class="kv-body04">Volume_norm: ${fmt2(s.volAtom[i])}</div>
-    <div class="kv-body04"><b>ActivitySum (Tx_norm + Volume_norm):</b> ${fmt2(atomSum)}</div>
+    <div class="kv-body04">ActivitySum (Tx_norm + Volume_norm): ${fmt2(atomSum)}</div>
   </div>
 `;
 
@@ -280,7 +298,7 @@ function hookInteractions() {
     <div class="kv-body04">Tx_norm: ${fmt2(s.txOne[i])}</div>
     ${s.volOne7?.[i] != null ? `<div class="kv-body04">Volume (7d): ${fmtInt.format(s.volOne7[i])}</div>` : ''}
     <div class="kv-body04">Volume_norm: ${fmt2(s.volOne[i])}</div>
-    <div class="kv-body04"><b>ActivitySum (Tx_norm + Volume_norm):</b> ${fmt2(oneSum)}</div>
+    <div class="kv-body04">ActivitySum (Tx_norm + Volume_norm): ${fmt2(oneSum)}</div>
   </div>
 `;
   }
