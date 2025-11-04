@@ -98,7 +98,8 @@ function draw(ts, s) {
       hoverinfo: 'skip',              // Plotly 툴팁 완전 비활성화
       hovertemplate: null,            // 추가로 안전하게
       marker: { size: 0 },
-      showlegend: true
+      showlegend: true,
+      legendrank: 6
     },
     {
       x: ts, y: s.pOne,
@@ -110,27 +111,32 @@ function draw(ts, s) {
       hoverinfo: 'none',
       hovertemplate: null,
       marker: { size: 0 },
-      showlegend: true
+      showlegend: true,
+      legendrank: 5
     },
 
     // Row2: ATOM Activity (bars, stack)
     {
       x: ts, y: s.txAtom, type: 'bar', name: 'ATOM - Tx',
-      xaxis: 'x2', yaxis: 'y2', marker: { color: COLOR.atomTx }, hovertemplate: '<extra></extra>'
+      xaxis: 'x2', yaxis: 'y2', marker: { color: COLOR.atomTx }, hovertemplate: '<extra></extra>',
+      legendrank: 4
     },
     {
       x: ts, y: s.volAtom, type: 'bar', name: 'ATOM - Volume',
-      xaxis: 'x2', yaxis: 'y2', marker: { color: COLOR.atomVol }, hovertemplate: '<extra></extra>'
+      xaxis: 'x2', yaxis: 'y2', marker: { color: COLOR.atomVol }, hovertemplate: '<extra></extra>',
+      legendrank: 3
     },
 
     // Row3: ATOMONE Activity (bars, stack)
     {
       x: ts, y: s.txOne, type: 'bar', name: 'ATOMONE - Tx',
-      xaxis: 'x3', yaxis: 'y3', marker: { color: COLOR.oneTx }, hovertemplate: '<extra></extra>'
+      xaxis: 'x3', yaxis: 'y3', marker: { color: COLOR.oneTx }, hovertemplate: '<extra></extra>',
+      legendrank: 2
     },
     {
       x: ts, y: s.volOne, type: 'bar', name: 'ATOMONE - Volume',
-      xaxis: 'x3', yaxis: 'y3', marker: { color: COLOR.oneVol }, hovertemplate: '<extra></extra>'
+      xaxis: 'x3', yaxis: 'y3', marker: { color: COLOR.oneVol }, hovertemplate: '<extra></extra>',
+      legendrank: 1
     },
   ];
 
@@ -165,7 +171,7 @@ function draw(ts, s) {
 
     barmode: 'stack',
     bargap: 0.05,
-    legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: -0.15 },
+    legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: -0.15, traceorder: 'reversed' },
 
     // Plotly 기본 hoverlabel은 숨기고(완전 투명), 커스텀 kv-tooltip만 쓴다
     hovermode: 'x unified',
