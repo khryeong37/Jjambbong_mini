@@ -231,27 +231,32 @@ body {
 }
 
 /* ========= Buttons ========= */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  border: 1px solid var(--grid);
-  background: var(--static-white);
-  color: var(--primary-black);
+#rangeBtns .btn {
+  font-family: 'Noto Sans', sans-serif;
   font-size: var(--fs-label01);
   font-weight: 600;
+  color: var(--primary-deep);
+  background: var(--static-white);
+  border: 2px solid var(--grid);
+  border-radius: 999px;
+  /* pill 형태 */
+  padding: 8px 14px;
   cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
 }
 
-.btn.sm {
-  padding: 6px 10px;
-  font-size: 12px;
+/* hover 상태 */
+#rangeBtns .btn:hover {
+  background: var(--primary-gray);
+  border-color: var(--grid);
 }
 
-.btn:hover {
-  background: #f8fafc;
+/* active / pressed 상태 */
+#rangeBtns .btn:active,
+#rangeBtns .btn.is-active {
+  background: var(--primary-deep);
+  color: var(--static-white);
+  border-color: var(--grid);
 }
 
 .icon-btn {
@@ -399,9 +404,4 @@ body {
   font-weight: 400;
   line-height: var(--lh-130);
   color: var(--primary-black);
-}
-
-.kv-muted {
-  color: var(--primary-deep);
-  font-weight: 400;
 }
