@@ -4,10 +4,42 @@ let G = { ts: [], s: {}, xMin: null, xMax: null };
 // ===== 포맷 =====
 const fmtInt = new Intl.NumberFormat('en-US'); // 12,345,678
 const fmt2 = (v) => (v == null || isNaN(v) ? '' : Number(v).toFixed(2));
+// ===== 숫자 변환 유틸 =====
+function numOrNull(v) {
+  if (v === undefined || v === null) return null;
+  if (typeof v === 'string') {
+    const t = v.trim();
+    if (!t) return null;
+    v = t.replace(/,/g, '');
+  }
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function numOrZero(v) {
+  const n = numOrNull(v);
+  return n == null ? 0 : n;
+}
+function rollingSum(arr, win = 7) {
+  const out = new Array(arr.length).fill(null);
+  let sum = 0,
+    q = [];
+  for (let i = 0; i < arr.length; i++) {
+    const v = numOrZero(arr[i]); // null이면 0 처리
+    q.push(v);
+    sum += v;
+    if (q.length > win) sum -= q.shift();
+    if (i >= win - 1) out[i] = sum;
+  }
+  return out;
+}
+
 const $$ = (sel) => document.querySelector(sel);
 
 function cssVar(name) {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue(name)
+    .trim();
 }
 const COLOR = {
   atomPr: cssVar('--data-atom-pr'),
@@ -18,7 +50,7 @@ const COLOR = {
   oneTx: cssVar('--data-one-tx'),
   paper: cssVar('--static-bg'),
   plot: cssVar('--static-bg'),
-  grid: cssVar('--grid')
+  grid: cssVar('--grid'),
 };
 
 // CSV path (자동 로드)
@@ -33,18 +65,56 @@ function resolveCols(fields) {
   };
   return {
     timestamp: find(['timestamp', 'date', 'time']),
-    priceAtomone: find(['atomone price', 'atomone_price', 'marketprice_atomone']),
-    priceAtom: find(['cosmos price', 'atom price', 'cosmos_price', 'atom_price', 'marketprice_cosmos']),
+    priceAtomone: find([
+      'atomone price',
+      'atomone_price',
+      'marketprice_atomone',
+    ]),
+    priceAtom: find([
+      'cosmos price',
+      'atom price',
+      'cosmos_price',
+      'atom_price',
+      'marketprice_cosmos',
+    ]),
     // norm
-    txAtomone: find(['atomone tx (norm)', 'txcount_atomone_norm', 'atomone tx_norm']),
-    volAtomone: find(['atomone volume (norm)', 'atomone volume_norm', 'marketvolume_atomone_adj_global']),
-    txAtom: find(['cosmos tx (norm)', 'txcount_cosmos_norm', 'atom tx_norm', 'cosmos tx_norm']),
-    volAtom: find(['cosmos volume (norm)', 'cosmos volume_norm', 'marketvolume_cosmos_adj_global']),
+    txAtomone: find([
+      'atomone tx (norm)',
+      'txcount_atomone_norm',
+      'atomone tx_norm',
+    ]),
+    volAtomone: find([
+      'atomone volume (norm)',
+      'atomone volume_norm',
+      'marketvolume_atomone_adj_global',
+    ]),
+    txAtom: find([
+      'cosmos tx (norm)',
+      'txcount_cosmos_norm',
+      'atom tx_norm',
+      'cosmos tx_norm',
+    ]),
+    volAtom: find([
+      'cosmos volume (norm)',
+      'cosmos volume_norm',
+      'marketvolume_cosmos_adj_global',
+    ]),
     // optional raw 7d
-    txAtomone7: find(['atomone tx (7d)', 'atomone tx_7d']),
-    volAtomone7: find(['atomone volume (7d)', 'atomone volume_7d']),
-    txAtom7: find(['cosmos tx (7d)', 'atom tx (7d)', 'cosmos tx_7d']),
-    volAtom7: find(['cosmos volume (7d)', 'cosmos volume_7d']),
+    // optional raw 7d
+    // optional raw 7d (컬럼명 유연 매칭)
+    txAtomone7: find([
+      'atomone tx (7d)',
+      'atomone tx_7d',
+      'atomone tx7d',
+      'atomone tx 7d',
+      'sum tx 7d atomone',
+      'tx_7day_atomone',
+      'tx (raw 7d) atomone',
+    ]),
+    txAtomoneRaw: find(['txcount_atomone']),
+    volAtomoneRaw: find(['marketvolume_atomone']),
+    txAtomRaw: find(['txcount_cosmos']),
+    volAtomRaw: find(['marketvolume_cosmos']),
   };
 }
 
@@ -58,27 +128,51 @@ function parseCSVAndDraw(csvText) {
   const { data, meta } = parsed;
   const c = resolveCols(meta.fields);
 
-  const ts = [], s = {
-    pOne: [], pAtom: [],
-    txOne: [], volOne: [], txOne7: [], volOne7: [],
-    txAtom: [], volAtom: [], txAtom7: [], volAtom7: [],
-  };
+  const ts = [],
+    s = {
+      pOne: [],
+      pAtom: [],
+      txOne: [],
+      volOne: [],
+      txOne7: [],
+      volOne7: [],
+      txAtom: [],
+      volAtom: [],
+      txAtom7: [],
+      volAtom7: [],
+    };
+
+  const rTxOne = [],
+    rVolOne = [],
+    rTxAtom = [],
+    rVolAtom = [];
 
   for (const row of data) {
     const t = row[c.timestamp];
     if (!t) continue;
     ts.push(new Date(t));
-    s.pOne.push(+row[c.priceAtomone]);
-    s.pAtom.push(+row[c.priceAtom]);
-    s.txOne.push(+row[c.txAtomone]);
-    s.volOne.push(+row[c.volAtomone]);
-    s.txAtom.push(+row[c.txAtom]);
-    s.volAtom.push(+row[c.volAtom]);
-    s.txOne7.push(c.txAtomone7 ? +row[c.txAtomone7] : null);
-    s.volOne7.push(c.volAtomone7 ? +row[c.volAtomone7] : null);
-    s.txAtom7.push(c.txAtom7 ? +row[c.txAtom7] : null);
-    s.volAtom7.push(c.volAtom7 ? +row[c.volAtom7] : null);
+
+    // price
+    s.pOne.push(numOrZero(row[c.priceAtomone]));
+    s.pAtom.push(numOrZero(row[c.priceAtom]));
+
+    // norm
+    s.txOne.push(numOrZero(row[c.txAtomone]));
+    s.volOne.push(numOrZero(row[c.volAtomone]));
+    s.txAtom.push(numOrZero(row[c.txAtom]));
+    s.volAtom.push(numOrZero(row[c.volAtom]));
+
+    // raw daily (없으면 0)
+    rTxOne.push(numOrZero(row[c.txAtomoneRaw]));
+    rVolOne.push(numOrZero(row[c.volAtomoneRaw]));
+    rTxAtom.push(numOrZero(row[c.txAtomRaw]));
+    rVolAtom.push(numOrZero(row[c.volAtomRaw]));
   }
+  // ✅ 7일 합계 계산
+  s.txOne7 = rollingSum(rTxOne, 7);
+  s.volOne7 = rollingSum(rVolOne, 7);
+  s.txAtom7 = rollingSum(rTxAtom, 7);
+  s.volAtom7 = rollingSum(rVolAtom, 7);
 
   G = { ts, s, xMin: ts[0], xMax: ts[ts.length - 1] };
   draw(ts, s);
@@ -89,89 +183,158 @@ function draw(ts, s) {
   const traces = [
     // Row1: Price (lines)
     {
-      x: ts, y: s.pAtom,
+      x: ts,
+      y: s.pAtom,
       type: 'scatter',
       mode: 'lines',
       name: 'ATOM - Price (USD)',
-      xaxis: 'x', yaxis: 'y',
+      xaxis: 'x',
+      yaxis: 'y',
       line: { color: COLOR.atomPr, width: 2 },
-      hoverinfo: 'skip',              // Plotly 툴팁 완전 비활성화
-      hovertemplate: null,            // 추가로 안전하게
+      hoverinfo: 'skip', // Plotly 툴팁 완전 비활성화
+      hovertemplate: null, // 추가로 안전하게
       marker: { size: 0 },
       showlegend: true,
-      legendrank: 6
+      legendrank: 6,
     },
     {
-      x: ts, y: s.pOne,
+      x: ts,
+      y: s.pOne,
       type: 'scatter',
       mode: 'lines',
       name: 'ATOMONE - Price (USD)',
-      xaxis: 'x', yaxis: 'y',
+      xaxis: 'x',
+      yaxis: 'y',
       line: { color: COLOR.onePr, width: 2 },
       hoverinfo: 'none',
       hovertemplate: null,
       marker: { size: 0 },
       showlegend: true,
-      legendrank: 5
+      legendrank: 5,
     },
 
     // Row2: ATOM Activity (bars, stack)
     {
-      x: ts, y: s.txAtom, type: 'bar', name: 'ATOM - Tx',
-      xaxis: 'x2', yaxis: 'y2', marker: { color: COLOR.atomTx }, hovertemplate: '<extra></extra>',
-      legendrank: 4
+      x: ts,
+      y: s.txAtom,
+      type: 'bar',
+      name: 'ATOM - Tx',
+      xaxis: 'x2',
+      yaxis: 'y2',
+      marker: { color: COLOR.atomTx },
+      hovertemplate: '<extra></extra>',
+      legendrank: 4,
     },
     {
-      x: ts, y: s.volAtom, type: 'bar', name: 'ATOM - Volume',
-      xaxis: 'x2', yaxis: 'y2', marker: { color: COLOR.atomVol }, hovertemplate: '<extra></extra>',
-      legendrank: 3
+      x: ts,
+      y: s.volAtom,
+      type: 'bar',
+      name: 'ATOM - Volume',
+      xaxis: 'x2',
+      yaxis: 'y2',
+      marker: { color: COLOR.atomVol },
+      hovertemplate: '<extra></extra>',
+      legendrank: 3,
     },
 
     // Row3: ATOMONE Activity (bars, stack)
     {
-      x: ts, y: s.txOne, type: 'bar', name: 'ATOMONE - Tx',
-      xaxis: 'x3', yaxis: 'y3', marker: { color: COLOR.oneTx }, hovertemplate: '<extra></extra>',
-      legendrank: 2
+      x: ts,
+      y: s.txOne,
+      type: 'bar',
+      name: 'ATOMONE - Tx',
+      xaxis: 'x3',
+      yaxis: 'y3',
+      marker: { color: COLOR.oneTx },
+      hovertemplate: '<extra></extra>',
+      legendrank: 2,
     },
     {
-      x: ts, y: s.volOne, type: 'bar', name: 'ATOMONE - Volume',
-      xaxis: 'x3', yaxis: 'y3', marker: { color: COLOR.oneVol }, hovertemplate: '<extra></extra>',
-      legendrank: 1
+      x: ts,
+      y: s.volOne,
+      type: 'bar',
+      name: 'ATOMONE - Volume',
+      xaxis: 'x3',
+      yaxis: 'y3',
+      marker: { color: COLOR.oneVol },
+      hovertemplate: '<extra></extra>',
+      legendrank: 1,
     },
   ];
 
   const layout = {
-    grid: { rows: 3, columns: 1, pattern: 'coupled', roworder: 'top to bottom' },
+    grid: {
+      rows: 3,
+      columns: 1,
+      pattern: 'coupled',
+      roworder: 'top to bottom',
+    },
 
     font: {
       family: 'Noto Sans',
-      color: '#171717'
+      color: '#171717',
     },
 
-    xaxis: { anchor: 'y', type: 'date', matches: null, showticklabels: false, showspikes: false, spikethickness: 1, spikecolor: 'rgba(100,100,100,0.55)' },
-    xaxis2: { anchor: 'y2', type: 'date', matches: 'x', showticklabels: false, showspikes: false, spikethickness: 1, spikecolor: 'rgba(100,100,100,0.55)' },
-    xaxis3: { anchor: 'y3', type: 'date', matches: 'x', showspikes: false, spikethickness: 1, spikecolor: 'rgba(100,100,100,0.55)', tickformat: '%b %Y' },
+    xaxis: {
+      anchor: 'y',
+      type: 'date',
+      matches: null,
+      showticklabels: false,
+      showspikes: false,
+      spikethickness: 1,
+      spikecolor: 'rgba(100,100,100,0.55)',
+    },
+    xaxis2: {
+      anchor: 'y2',
+      type: 'date',
+      matches: 'x',
+      showticklabels: false,
+      showspikes: false,
+      spikethickness: 1,
+      spikecolor: 'rgba(100,100,100,0.55)',
+    },
+    xaxis3: {
+      anchor: 'y3',
+      type: 'date',
+      matches: 'x',
+      showspikes: false,
+      spikethickness: 1,
+      spikecolor: 'rgba(100,100,100,0.55)',
+      tickformat: '%b %Y',
+    },
 
     yaxis: {
       title: 'Price',
       font: { size: 10, family: 'Noto Sans', color: '#171717', weight: 600 },
-      tickfont: { size: 12, family: 'Noto Sans', color: '#171717' }, domain: [0.56, 1.0]
+      tickfont: { size: 12, family: 'Noto Sans', color: '#171717' },
+      domain: [0.56, 1.0],
     },
     yaxis2: {
       title: 'ATOM Activity',
       font: { size: 10, family: 'Noto Sans', color: '#171717', weight: 600 },
       tickfont: { size: 10, family: 'Noto Sans', color: '#171717' },
-      domain: [0.30, 0.52], range: [0, 2], dtick: 0.5
+      domain: [0.3, 0.52],
+      range: [0, 2],
+      dtick: 0.5,
     },
     yaxis3: {
       title: 'ATOMONE Activity',
       font: { size: 10, family: 'Noto Sans', color: '#171717', weight: 600 },
-      tickfont: { size: 10, family: 'Noto Sans', color: '#171717' }, domain: [0.00, 0.26], range: [0, 2], dtick: 0.5
+      tickfont: { size: 10, family: 'Noto Sans', color: '#171717' },
+      domain: [0.0, 0.26],
+      range: [0, 2],
+      dtick: 0.5,
     },
 
     barmode: 'stack',
     bargap: 0.05,
-    legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: -0.15, traceorder: 'reversed' },
+    legend: {
+      orientation: 'h',
+      x: 0.5,
+      xanchor: 'center',
+      y: -0.15,
+      traceorder: 'reversed',
+    },
 
     // Plotly 기본 hoverlabel은 숨기고(완전 투명), 커스텀 kv-tooltip만 쓴다
     hovermode: 'x unified',
@@ -181,7 +344,7 @@ function draw(ts, s) {
       bordercolor: 'rgba(0,0,0,0)',
       font: { color: 'rgba(0,0,0,0)' },
       align: 'left',
-      namelength: -1
+      namelength: -1,
     },
 
     shapes: [],
@@ -200,7 +363,7 @@ function draw(ts, s) {
   });
 }
 function createKVTooltips() {
-  ['kv-row1', 'kv-row2', 'kv-row3'].forEach(id => {
+  ['kv-row1', 'kv-row2', 'kv-row3'].forEach((id) => {
     if (!document.getElementById(id)) {
       const n = document.createElement('div');
       n.id = id;
@@ -237,8 +400,8 @@ function hookInteractions() {
   const kv2 = ensureKV('kv-row2');
   const kv3 = ensureKV('kv-row3');
   const fmtIntOrDash = (v) => (v == null || isNaN(v) ? '—' : fmtInt.format(v));
-  const fmtNumOrDash = (v) => (v == null || isNaN(v) ? '—' : Number(v).toFixed(2));
-
+  const fmtNumOrDash = (v) =>
+    v == null || isNaN(v) ? '—' : Number(v).toFixed(2);
 
   // ===== 위치 계산 유틸 =====
   function placeKVBoxes(mouseClientX) {
@@ -259,15 +422,15 @@ function hookInteractions() {
     const centers = [
       { el: kv1, ax: 'yaxis' },
       { el: kv2, ax: 'yaxis2' },
-      { el: kv3, ax: 'yaxis3' }
+      { el: kv3, ax: 'yaxis3' },
     ];
 
     centers.forEach(({ el, ax }) => {
-      const off = fl[ax]._offset;   // subplot의 top (px)
-      const len = fl[ax]._length;   // subplot의 높이 (px)
-      const cy = rect.top + off + (len / 2);   // 페이지 기준 중앙 Y
-      const h = el.offsetHeight || 0;         // 카드 높이
-      el.style.top = `${cy - h / 2}px`;            // 중앙 정렬
+      const off = fl[ax]._offset; // subplot의 top (px)
+      const len = fl[ax]._length; // subplot의 높이 (px)
+      const cy = rect.top + off + len / 2; // 페이지 기준 중앙 Y
+      const h = el.offsetHeight || 0; // 카드 높이
+      el.style.top = `${cy - h / 2}px`; // 중앙 정렬
     });
   }
 
@@ -294,7 +457,9 @@ function hookInteractions() {
     <div class="kv-body04">Tx_norm: ${fmtNumOrDash(s.txAtom[i])}</div>
     <div class="kv-body04">Volume (7d): ${fmtIntOrDash(s.volAtom7?.[i])}</div>
     <div class="kv-body04">Volume_norm: ${fmtNumOrDash(s.volAtom[i])}</div>
-    <div class="kv-body04">ActivitySum (Tx_norm + Volume_norm): ${fmtNumOrDash(atomSum)}</div>
+    <div class="kv-body04">ActivitySum (Tx_norm + Volume_norm): ${fmtNumOrDash(
+      atomSum
+    )}</div>
   </div>
 `;
 
@@ -307,7 +472,9 @@ function hookInteractions() {
     <div class="kv-body04">Tx_norm: ${fmtNumOrDash(s.txOne[i])}</div>
     <div class="kv-body04">Volume (7d): ${fmtIntOrDash(s.volOne7?.[i])}</div>
     <div class="kv-body04">Volume_norm: ${fmtNumOrDash(s.volOne[i])}</div>
-    <div class="kv-body04">ActivitySum (Tx_norm + Volume_norm): ${fmtNumOrDash(oneSum)}</div>
+    <div class="kv-body04">ActivitySum (Tx_norm + Volume_norm): ${fmtNumOrDash(
+      oneSum
+    )}</div>
   </div>
 `;
   }
@@ -386,7 +553,9 @@ function applyRange(kind) {
     parseCSVAndDraw(text);
   } catch (e) {
     console.error(e);
-    alert('CSV 자동 로드 실패: Live Server(HTTP)로 열려 있는지, 그리고 ./data/atomone_cosmos_data_final.csv 경로가 맞는지 확인해주세요.');
+    alert(
+      'CSV 자동 로드 실패: Live Server(HTTP)로 열려 있는지, 그리고 ./data/atomone_cosmos_data_final.csv 경로가 맞는지 확인해주세요.'
+    );
   }
 })();
 
