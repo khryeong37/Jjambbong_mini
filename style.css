@@ -1,16 +1,16 @@
 /* ========= Base ========= */
 :root {
-  --static-white: #ffffff;
-  --static-bg: #f6f7fb;
+  --static-white: #FFFFFF;
+  --static-bg: #F6F7FB;
   --primary-black: #171717;
-  --primary-gray: #ededed;
-  --primary-deep: #44404b;
-  --data-atom-pr: #ff482f;
-  --data-one-pr: #096eff;
-  --data-atom-vol: #ff5d47;
-  --data-atom-tx: #ffaea3;
-  --data-one-vol: #4994ff;
-  --data-one-tx: #a7cbff;
+  --primary-gray: #EDEDED;
+  --primary-deep: #44404B;
+  --data-atom-pr: #FF482F;
+  --data-one-pr: #096EFF;
+  --data-atom-vol: #FF5D47;
+  --data-atom-tx: #FFAEA3;
+  --data-one-vol: #4994FF;
+  --data-one-tx: #A7CBFF;
   --fg: var(--primary-black);
   --muted: var(--primary-deep);
   --grid: var(--primary-gray);
@@ -25,7 +25,7 @@
   --fs-body03: 12px;
   --fs-body04: 10px;
   --lh-135: 1.35;
-  --lh-130: 1.3;
+  --lh-130: 1.30;
 }
 
 /* weight utils */
@@ -116,7 +116,7 @@ body {
 .toolbar-side {
   margin-left: auto;
   flex: 0 0 auto;
-  top: -4px;
+  top: -8px;
   position: relative;
   z-index: 20000;
 }
@@ -208,14 +208,14 @@ body {
 
 .body03 {
   font-size: var(--fs-body03);
-  line-height: 1.3;
+  line-height: 1.30;
   font-weight: 400;
   letter-spacing: 0;
 }
 
 .body04 {
   font-size: var(--fs-body04);
-  line-height: 1.3;
+  line-height: 1.30;
   font-weight: 400;
   letter-spacing: 0;
 }
@@ -257,7 +257,7 @@ body {
   background-position: center;
   background-repeat: no-repeat;
   cursor: pointer;
-  transition: transform 0.1s ease;
+  transition: transform .1s ease;
 }
 
 #helpBtn.help {
@@ -294,11 +294,11 @@ body {
   max-width: 400px;
   border-radius: 12px;
   background: var(--static-white);
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0 20px rgba(0, 0, 0, .15);
   white-space: normal;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.12s ease;
+  transition: opacity .12s ease;
   z-index: 2001;
 }
 
@@ -307,7 +307,7 @@ body {
   pointer-events: auto;
 }
 
-.help-popover > * {
+.help-popover>* {
   margin: 0;
 }
 
@@ -351,7 +351,7 @@ body {
 
 .kv-tooltip {
   position: fixed;
-  width: 262px;
+  width: 268px;
   padding: 16px 20px;
   display: flex;
   flex-direction: column;
@@ -364,7 +364,7 @@ body {
   color: var(--primary-black);
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.12s ease, transform 0.12s ease;
+  transition: opacity .12s ease, transform .12s ease;
   transform: translateY(4px);
 }
 
@@ -393,7 +393,4 @@ body {
   font-weight: 400;
   line-height: var(--lh-130);
   color: var(--primary-black);
-}
-#dateBtn {
-  display: none;
 }
