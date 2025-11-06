@@ -453,9 +453,9 @@ function hookInteractions() {
     kv2.innerHTML = `
   <div class="kv-tooltip-inner">
     <div class="kv-title04">ATOM</div>
-    <div class="kv-body04">Tx (7d): ${fmtIntOrDash(s.txAtom7?.[i])}</div>
+    <div class="kv-body04">Tx : ${fmtIntOrDash(s.txAtom7?.[i])}</div>
     <div class="kv-body04">Tx_norm: ${fmtNumOrDash(s.txAtom[i])}</div>
-    <div class="kv-body04">Volume (7d): ${fmtIntOrDash(s.volAtom7?.[i])}</div>
+    <div class="kv-body04">Volume : ${fmtIntOrDash(s.volAtom7?.[i])}</div>
     <div class="kv-body04">Volume_balanced: ${fmtNumOrDash(s.volAtom[i])}</div>
     <div class="kv-body04">ActivitySum (Tx_norm + Volume_balanced): ${fmtNumOrDash(
       atomSum
@@ -468,9 +468,9 @@ function hookInteractions() {
     kv3.innerHTML = `
   <div class="kv-tooltip-inner">
     <div class="kv-title04">ATOMONE</div>
-    <div class="kv-body04">Tx (7d): ${fmtIntOrDash(s.txOne7?.[i])}</div>
+    <div class="kv-body04">Tx: ${fmtIntOrDash(s.txOne7?.[i])}</div>
     <div class="kv-body04">Tx_norm: ${fmtNumOrDash(s.txOne[i])}</div>
-    <div class="kv-body04">Volume (7d): ${fmtIntOrDash(s.volOne7?.[i])}</div>
+    <div class="kv-body04">Volume: ${fmtIntOrDash(s.volOne7?.[i])}</div>
     <div class="kv-body04">Volume_balanced: ${fmtNumOrDash(s.volOne[i])}</div>
     <div class="kv-body04">ActivitySum (Tx_norm + Volume_balanced): ${fmtNumOrDash(
       oneSum
