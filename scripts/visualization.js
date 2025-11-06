@@ -563,20 +563,41 @@ function applyRange(kind) {
 const helpBtn = document.getElementById('helpBtn');
 const helpPop = document.getElementById('helpPop');
 
-function openHelp() {
-  helpPop.classList.add('is-open');
-  helpBtn.classList.add('is-open');
-  helpBtn.setAttribute('aria-expanded', 'true');
-  document.addEventListener('click', onDocClick);
-  document.addEventListener('keydown', onKeyDown);
-}
-function closeHelp() {
-  helpPop.classList.remove('is-open');
-  helpBtn.classList.remove('is-open');
-  helpBtn.setAttribute('aria-expanded', 'false');
-  document.removeEventListener('click', onDocClick);
-  document.removeEventListener('keydown', onKeyDown);
-}
+// ===== Help modal boot =====
+document.addEventListener('DOMContentLoaded', () => {
+  const helpBtn = document.getElementById('helpBtn');
+  const helpPop = document.getElementById('helpPop');
+  if (!helpBtn || !helpPop) {
+    console.warn('[Help] #helpBtn / #helpPop not found');
+    return;
+  }
+
+  const open = () => {
+    helpPop.classList.add('is-open');
+    helpBtn.setAttribute('aria-expanded', 'true');
+    document.addEventListener('click', onDocClick);
+    document.addEventListener('keydown', onKeyDown);
+  };
+  const close = () => {
+    helpPop.classList.remove('is-open');
+    helpBtn.setAttribute('aria-expanded', 'false');
+    document.removeEventListener('click', onDocClick);
+    document.removeEventListener('keydown', onKeyDown);
+  };
+  const toggle = (e) => {
+    e.stopPropagation(); // 자기 클릭이 닫힘으로 전달되지 않게
+    (helpPop.classList.contains('is-open') ? close : open)();
+  };
+  const onDocClick = (e) => {
+    if (!helpPop.contains(e.target) && e.target !== helpBtn) close();
+  };
+  const onKeyDown = (e) => {
+    if (e.key === 'Escape') close();
+  };
+
+  helpBtn.addEventListener('click', toggle);
+});
+
 function toggleHelp(e) {
   e.stopPropagation();
   if (helpPop.classList.contains('is-open')) closeHelp();
@@ -588,6 +609,11 @@ function onDocClick(e) {
 function onKeyDown(e) {
   if (e.key === 'Escape') closeHelp();
 }
+// 버튼에 동작 연결 (한 번만)
+if (helpBtn && helpPop) {
+  helpBtn.addEventListener('click', toggleHelp);
+}
+
 helpBtn.addEventListener('click', toggleHelp);
 
 // 리사이즈
